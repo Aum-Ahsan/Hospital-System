@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Search, Filter, Clock, Star, ArrowRight, MapPin } from 'lucide-react';
-import { doctors } from '../data/doctors';
+import { fetchDoctors } from '../services/api';
 
 export default function Doctors() {
   const location = useLocation();
@@ -10,6 +10,24 @@ export default function Doctors() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState(initialFilter);
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const loadDoctors = async () => {
+      try {
+        const data = await fetchDoctors();
+        setDoctors(data);
+      } catch (err) {
+        setError('Unable to load doctors. Please try again later.');
+        console.error('Doctors load failed:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadDoctors();
+  }, []);
 
   const specializations = ['All', ...new Set(doctors.map(d => d.specialization))];
 
@@ -33,7 +51,26 @@ export default function Doctors() {
         </div>
 
         {/* Search and Filter */}
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 mb-10">
+        {loading ? (
+          <div className="py-20 text-center w-full bg-white rounded-2xl border border-gray-100">
+            <div className="inline-flex items-center gap-3 text-gray-600">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-500"></div>
+              Loading doctors...
+            </div>
+          </div>
+        ) : error ? (
+          <div className="py-20 text-center w-full bg-white rounded-2xl border border-gray-100">
+            <p className="text-gray-700 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 mb-10">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -125,6 +162,8 @@ export default function Doctors() {
             </button>
           </div>
         )}
+        </>
+      )}
       </div>
     </div>
   );

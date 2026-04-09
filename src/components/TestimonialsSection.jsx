@@ -1,5 +1,5 @@
 import { Star, Quote } from 'lucide-react';
-import { testimonials } from '../data/doctors';
+import { testimonials } from '../data/siteContent';
 
 export default function TestimonialsSection() {
   return (

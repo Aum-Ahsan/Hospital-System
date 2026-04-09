@@ -1,15 +1,46 @@
 import { useParams, Link } from 'react-router-dom';
-import { CalendarCheck, Phone, Mail, Clock, MapPin, Award, BookOpen, User, ArrowLeft } from 'lucide-react';
-import { doctors } from '../data/doctors';
+import { useState, useEffect } from 'react';
+import { CalendarCheck, Phone, Mail, Clock, MapPin, Award, BookOpen, User, ArrowLeft, Loader2 } from 'lucide-react';
+import { fetchDoctor } from '../services/api';
 
 export default function DoctorDetails() {
   const { id } = useParams();
-  const doctor = doctors.find(d => d.id === parseInt(id));
+  const [doctor, setDoctor] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  if (!doctor) {
+  useEffect(() => {
+    const loadDoctor = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchDoctor(id);
+        setDoctor(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDoctor();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="pt-24 pb-20 min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-primary-500 mx-auto mb-4" />
+          <p className="text-gray-600">Loading doctor details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !doctor) {
     return (
       <div className="pt-32 pb-20 min-h-screen text-center">
-        <h2 className="text-2xl font-bold">Doctor not found</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Doctor not found</h2>
+        <p className="text-gray-600 mt-2">{error || 'The requested doctor could not be found.'}</p>
         <Link to="/doctors" className="text-primary-600 hover:underline mt-4 inline-block">Back to Doctors</Link>
       </div>
     );
@@ -104,13 +135,15 @@ export default function DoctorDetails() {
               </div>
               
               <div>
-                <Link
-                  to={`/doctors/${doctor.id}/sessions`}
+                <a
+                  href={doctor.eChannelLink || 'https://www.echannelling.com'}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-300 shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 transform hover:-translate-y-0.5 text-lg"
                 >
                   <CalendarCheck className="w-6 h-6" />
-                  View Available Sessions
-                </Link>
+                  Book via e-Channel
+                </a>
                 <p className="text-center text-xs text-gray-400 mt-3">
                   No advance payment required for online bookings.
                 </p>

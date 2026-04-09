@@ -22,8 +22,7 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsOpen(false);
+    setIsOpen(false); // eslint-disable-line react-hooks/set-state-in-effect
   }, [location]);
 
   return (

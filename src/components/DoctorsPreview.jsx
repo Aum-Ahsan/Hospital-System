@@ -1,9 +1,39 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, Clock, MapPin } from 'lucide-react';
-import { doctors } from '../data/doctors';
+import { useState, useEffect } from 'react';
+import { fetchDoctors } from '../services/api';
 
 export default function DoctorsPreview() {
-  const previewDoctors = doctors.slice(0, 3);
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDoctors()
+      .then(data => {
+        setDoctors(data.slice(0, 3));
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-gray-50 text-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-8 w-48 bg-gray-200 rounded mb-4"></div>
+          <div className="h-4 w-64 bg-gray-200 rounded mb-12"></div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl px-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-96 bg-gray-200 rounded-2xl"></div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 lg:py-28 bg-gradient-to-b from-gray-50 to-white">
@@ -25,7 +55,7 @@ export default function DoctorsPreview() {
 
         {/* Doctor Cards */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {previewDoctors.map((doctor) => (
+          {doctors.map((doctor) => (
             <div
               key={doctor.id}
               className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-primary-100/30 transition-all duration-300 hover:-translate-y-1"
@@ -90,3 +120,4 @@ export default function DoctorsPreview() {
     </section>
   );
 }
+

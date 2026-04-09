@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { User, Phone, Mail, ChevronDown, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
-import { doctors } from '../data/doctors';
+import { fetchDoctor } from '../services/api';
 
 export default function Appointment() {
   const location = useLocation();
@@ -10,7 +10,9 @@ export default function Appointment() {
   const doctorId = queryParams.get('doctor');
   const date = queryParams.get('date');
 
-  const doctor = doctors.find(d => d.id === parseInt(doctorId));
+  const [doctor, setDoctor] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   const [formData, setFormData] = useState({
     title: 'Mr.',
@@ -44,6 +46,27 @@ export default function Appointment() {
     setError(false);
   };
 
+  useEffect(() => {
+    const loadDoctor = async () => {
+      try {
+        const data = await fetchDoctor(doctorId);
+        setDoctor(data);
+      } catch (err) {
+        console.error('Failed to load doctor for appointment:', err);
+        setLoadError('Unable to load doctor details.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (doctorId) {
+      loadDoctor();
+    } else {
+      setLoading(false);
+      setLoadError('No doctor selected for the appointment.');
+    }
+  }, [doctorId]);
+
   if (isSubmitted) {
     return (
       <div className="pt-32 pb-20 min-h-[80vh] flex items-center justify-center bg-white px-4">
@@ -70,7 +93,27 @@ export default function Appointment() {
     <div className="min-h-screen bg-white pt-24 pb-20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {doctor && (
+        {loading ? (
+          <div className="py-20 text-center">
+            <div className="inline-flex items-center gap-3 text-gray-600">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-500"></div>
+              Loading appointment details...
+            </div>
+          </div>
+        ) : loadError ? (
+          <div className="pt-32 pb-20 min-h-screen text-center">
+            <h2 className="text-2xl font-bold">Unable to continue</h2>
+            <p className="text-gray-600 mt-2">{loadError}</p>
+            <button
+              onClick={() => navigate('/doctors')}
+              className="mt-6 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              Back to Doctors
+            </button>
+          </div>
+        ) : (
+          <> 
+            {doctor && (
             <div className="mb-6 p-4 bg-gray-50 border border-gray-100 rounded flex gap-4 items-center">
               <img src={doctor.image} alt={doctor.name} className="w-16 h-16 rounded-full object-cover" />
               <div>
@@ -264,6 +307,8 @@ export default function Appointment() {
             </div>
           )}
         </form>
+          </>
+        )}
       </div>
     </div>
   );

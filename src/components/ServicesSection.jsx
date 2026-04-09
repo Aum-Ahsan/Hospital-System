@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Siren, FlaskConical, Pill, CalendarCheck, ArrowRight } from 'lucide-react';
-import { services } from '../data/doctors';
+import { services } from '../data/siteContent';
 
 const iconMap = {
   Siren,

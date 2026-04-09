@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { doctors } from '../data/doctors';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { fetchDoctors } from '../services/api';
 import { Activity, User, MapPin, Clock, ArrowRight, Star } from 'lucide-react';
 
 const diseasesMapping = [
@@ -21,7 +21,9 @@ const diseasesMapping = [
 
 export default function BookAppointment() {
   const [selectedDisease, setSelectedDisease] = useState('');
-  const navigate = useNavigate();
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Find corresponding specialization
   const targetSpec = diseasesMapping.find(d => d.disease === selectedDisease)?.spec;
@@ -30,6 +32,21 @@ export default function BookAppointment() {
   const filteredDoctors = targetSpec 
     ? doctors.filter(doc => doc.specialization === targetSpec)
     : [];
+
+  useEffect(() => {
+    const loadDoctors = async () => {
+      try {
+        const data = await fetchDoctors();
+        setDoctors(data);
+      } catch (err) {
+        console.error('Unable to load doctors for booking:', err);
+        setError('Unable to load doctors. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadDoctors();
+  }, []);
 
   return (
     <div className="pt-24 pb-20 min-h-screen bg-gray-50">
@@ -64,7 +81,18 @@ export default function BookAppointment() {
           </div>
         </div>
 
-        {selectedDisease && (
+        {loading ? (
+          <div className="py-16 text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
+            <div className="inline-flex items-center gap-3 text-gray-600">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-500"></div>
+              Loading doctors...
+            </div>
+          </div>
+        ) : error ? (
+          <div className="py-16 text-center bg-white rounded-3xl border border-gray-100 shadow-sm text-gray-600">
+            {error}
+          </div>
+        ) : selectedDisease && (
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <User className="w-5 h-5 text-primary-500" />
@@ -98,10 +126,10 @@ export default function BookAppointment() {
                     </div>
 
                     <Link
-                      to={`/doctors/${doctor.id}/sessions`}
+                      to={`/doctors/${doctor.id}`}
                       className="mt-6 w-full flex items-center justify-center gap-2 py-2.5 bg-primary-50 text-primary-700 rounded-xl text-sm font-semibold hover:bg-primary-100 transition-all"
                     >
-                      View Sessions & Book
+                      View Profile & Book
                       <ArrowRight className="w-4 h-4" />
                     </Link>
                   </div>
